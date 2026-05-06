@@ -6,7 +6,7 @@ const session = require("express-session");
 
 const app = express();
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 const OWNER_USER = "ptuser";
 const OWNER_PASSWORD = process.env.OWNER_PASSWORD || "winkleperi123";
 
@@ -160,6 +160,6 @@ app.delete("/api/requests/:index", (req, res) => {
   res.json({ success: true });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log("Periwinkle server running on port " + PORT);
 });
