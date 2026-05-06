@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Periwinkle | Trades</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <a href="index.html" class="brand">
+    <img src="images/periwinkle-logo.png" alt="Periwinkle Team Logo">
+    <span>Periwinkle</span>
+  </a>
+
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="members.html">Members</a>
+    <a href="lore.html">Lore</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="trades.html">Trades</a>
+    <a href="access.html">Access</a>
+    <a href="rules.html">Rules</a>
+  </nav>
+</header>
+
+
+<main class="page">
+  <section class="page-title">
+    <p class="eyebrow">Market Board</p>
+    <h1>Trade Requests</h1>
+    <p>Submit trade requests as a viewer, or manage them as the Periwinkle team. Login is now in the Access page because the Trades page deserved breathing room.</p>
+  </section>
+
+  <section class="mode-panel">
+    <div>
+      <p class="eyebrow">Current Access</p>
+      <h2 id="modeTitle">Guest Mode</h2>
+      <p class="muted" id="modeDesc">Log in through the Access page before submitting or managing trade requests.</p>
+    </div>
+
+    <div class="mode-actions">
+      <a href="access.html" class="btn-link">Open Access</a>
+      <button id="logoutBtn" type="button">Logout</button>
+    </div>
+  </section>
+
+  <section class="trade-grid">
+    <div class="trade-card">
+      <h2>Spruce Logs</h2>
+      <p>64x stack</p>
+      <strong>3 Diamonds</strong>
+      <span class="badge">Available</span>
+    </div>
+
+    <div class="trade-card">
+      <h2>Ancient Debris</h2>
+      <p>1 piece</p>
+      <strong>8-12 Diamonds</strong>
+      <span class="badge">Limited</span>
+    </div>
+
+    <div class="trade-card">
+      <h2>Pink Wool</h2>
+      <p>32 pieces</p>
+      <strong>2 Diamonds</strong>
+      <span class="badge">Available</span>
+    </div>
+  </section>
+
+  <section class="panel request-panel viewer-only">
+    <div>
+      <p class="eyebrow">Viewer Tool</p>
+      <h2>Send Trade Request</h2>
+      <p class="muted">Submit what you want to buy, sell, or exchange with Periwinkle.</p>
+    </div>
+
+    <form id="tradeRequestForm" class="receipt-form">
+      <input id="requestType" placeholder="Request type, ex. Buy / Sell / Trade" required>
+      <input id="requestItem" placeholder="Item, ex. 64 Spruce Logs" required>
+      <input id="requestOffer" placeholder="Your offer, ex. 3 Diamonds" required>
+      <input id="requestDate" type="date">
+      <textarea id="requestNote" placeholder="Extra details, meeting place, quantity, etc."></textarea>
+      <button type="submit">Submit Request</button>
+    </form>
+  </section>
+
+  <section class="receipt-board">
+    <div class="section-heading">
+      <p class="eyebrow">Request Board</p>
+      <h2>Trade Requests & Vouches</h2>
+      <p class="muted">Pending requests become vouches once the Periwinkle team marks them done.</p>
+    </div>
+
+    <div id="requestList" class="receipt-grid"></div>
+  </section>
+</main>
+
+<script src="js/script.js"></script>
+</body>
+</html>

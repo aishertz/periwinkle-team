@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 500 500">
+<rect width="500" height="500" fill="#1a1024"/>
+<circle cx="250" cy="180" r="90" fill="#f25ac2"/>
+<rect x="160" y="265" width="180" height="145" rx="28" fill="#7c2aa7"/>
+<rect x="205" y="125" width="90" height="90" fill="#ffd8f2"/>
+<rect x="210" y="285" width="80" height="80" fill="#ffd8f2"/>
+<circle cx="220" cy="175" r="10" fill="#23122d"/>
+<circle cx="280" cy="175" r="10" fill="#23122d"/>
+<path d="M215 220 Q250 245 285 220" stroke="#23122d" stroke-width="10" fill="none" stroke-linecap="round"/>
+<text x="250" y="465" text-anchor="middle" fill="#ffd8f2" font-size="30" font-family="Arial">Character Image</text>
+</svg>
