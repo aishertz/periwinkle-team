@@ -1,159 +1,183 @@
-const express = require("express");
-const fs = require("fs");
-const path = require("path");
-const session = require("express-session");
+(async function () {
+  const modeTitle = document.getElementById("modeTitle");
+  const modeDesc = document.getElementById("modeDesc");
+  const logoutBtn = document.getElementById("logoutBtn");
 
-const app = express();
-
-const PORT = process.env.PORT || 80;
-const OWNER_USER = "ptuser";
-const OWNER_PASSWORD = process.env.OWNER_PASSWORD || "winkleperi123";
-
-const DB_PATH = path.join(__dirname, "database.json");
-
-if (!fs.existsSync(DB_PATH)) {
-  fs.writeFileSync(DB_PATH, JSON.stringify({ requests: [] }, null, 2));
-}
-
-app.use(express.json());
-
-app.use(session({
-  secret: process.env.SESSION_SECRET || "periwinkle-secret",
-  resave: false,
-  saveUninitialized: false
-}));
-
-app.use(express.static(__dirname));
-
-function readDB() {
-  return JSON.parse(fs.readFileSync(DB_PATH, "utf8"));
-}
-
-function saveDB(data) {
-  fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
-}
-
-app.post("/api/login-owner", (req, res) => {
-  const { username, password } = req.body;
-
-  if (username === OWNER_USER && password === OWNER_PASSWORD) {
-    req.session.owner = true;
-    return res.json({ success: true });
+  async function getSession() {
+    const res = await fetch("/api/session");
+    return res.json();
   }
 
-  res.status(401).json({ success: false });
-});
-
-app.post("/api/login-viewer", (req, res) => {
-  const { ign, discord } = req.body;
-
-  if (!ign || !discord) {
-    return res.status(400).json({ error: "Minecraft IGN and Discord are required" });
+  function updateModeUI(session) {
+    if (!modeTitle) return;
+    if (session.mode === "owner") {
+      modeTitle.textContent = "Owner Mode";
+      if (modeDesc) modeDesc.textContent = "You are logged in as the Periwinkle team owner.";
+    } else if (session.mode === "viewer") {
+      modeTitle.textContent = "Viewer Mode — " + session.ign;
+      if (modeDesc) modeDesc.textContent = "Logged in as " + session.ign + " (" + session.discord + "). You can submit trade requests.";
+    } else {
+      modeTitle.textContent = "Guest Mode";
+      if (modeDesc) modeDesc.textContent = "Log in through the Access page before submitting or managing trade requests.";
+    }
   }
 
-  req.session.viewer = { ign, discord };
-  res.json({ success: true });
-});
+  function applySessionToPage(session) {
+    updateModeUI(session);
 
-app.post("/api/logout", (req, res) => {
-  req.session.destroy(() => {
-    res.json({ success: true });
-  });
-});
+    const viewerOnlySections = document.querySelectorAll(".viewer-only");
+    const ownerOnlySections = document.querySelectorAll(".owner-only");
 
-app.get("/api/session", (req, res) => {
-  if (req.session.owner) {
-    return res.json({ mode: "owner" });
-  }
-
-  if (req.session.viewer) {
-    return res.json({
-      mode: "viewer",
-      ign: req.session.viewer.ign,
-      discord: req.session.viewer.discord
+    viewerOnlySections.forEach(el => {
+      el.style.display = session.mode === "viewer" ? "" : "none";
+    });
+    ownerOnlySections.forEach(el => {
+      el.style.display = session.mode === "owner" ? "" : "none";
     });
   }
 
-  res.json({ mode: "guest" });
-});
+  const session = await getSession();
+  applySessionToPage(session);
 
-app.get("/api/requests", (req, res) => {
-  const db = readDB();
-  res.json(db.requests);
-});
-
-app.post("/api/requests", (req, res) => {
-  if (!req.session.viewer) {
-    return res.status(403).json({ error: "Viewer login required" });
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+      await fetch("/api/logout", { method: "POST" });
+      window.location.reload();
+    });
   }
 
-  const db = readDB();
+  const viewerLoginForm = document.getElementById("viewerLoginForm");
+  if (viewerLoginForm) {
+    viewerLoginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const ign = document.getElementById("viewerIgn").value.trim();
+      const discord = document.getElementById("viewerDiscord").value.trim();
+      const res = await fetch("/api/login-viewer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ign, discord }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.location.reload();
+      } else {
+        alert(data.error || "Login failed.");
+      }
+    });
+  }
 
-  const request = {
-    ign: req.session.viewer.ign,
-    discord: req.session.viewer.discord,
-    type: req.body.type,
-    item: req.body.item,
-    offer: req.body.offer,
-    date: req.body.date,
-    note: req.body.note,
-    status: "Pending",
-    handledBy: ""
+  const ownerLoginForm = document.getElementById("ownerLoginForm");
+  if (ownerLoginForm) {
+    ownerLoginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("ownerUsername").value.trim();
+      const password = document.getElementById("ownerPassword").value;
+      const res = await fetch("/api/login-owner", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.location.reload();
+      } else {
+        alert("Invalid owner credentials.");
+      }
+    });
+  }
+
+  const tradeRequestForm = document.getElementById("tradeRequestForm");
+  if (tradeRequestForm) {
+    tradeRequestForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const type = document.getElementById("requestType").value.trim();
+      const item = document.getElementById("requestItem").value.trim();
+      const offer = document.getElementById("requestOffer").value.trim();
+      const date = document.getElementById("requestDate").value;
+      const note = document.getElementById("requestNote").value.trim();
+      const res = await fetch("/api/requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, item, offer, date, note }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        tradeRequestForm.reset();
+        loadRequests();
+      } else {
+        alert(data.error || "Failed to submit request.");
+      }
+    });
+  }
+
+  const requestList = document.getElementById("requestList");
+
+  async function loadRequests() {
+    if (!requestList) return;
+    const res = await fetch("/api/requests");
+    const requests = await res.json();
+    const currentSession = await getSession();
+
+    if (requests.length === 0) {
+      requestList.innerHTML = "<p class='muted'>No trade requests yet.</p>";
+      return;
+    }
+
+    requestList.innerHTML = requests.map((r, i) => {
+      const statusClass = r.status === "Done" ? "badge done" : r.status === "Accepted" ? "badge accepted" : r.status === "Declined" ? "badge declined" : "badge";
+      const ownerActions = currentSession.mode === "owner" ? `
+        <div class="request-actions">
+          <button onclick="handleRequest(${i}, 'accept')">Accept</button>
+          <button onclick="handleRequest(${i}, 'decline')">Decline</button>
+          <button onclick="handleRequest(${i}, 'done')">Done</button>
+          <button onclick="deleteRequest(${i})">Delete</button>
+        </div>` : "";
+      return `
+        <div class="receipt-card">
+          <div class="receipt-header">
+            <span class="receipt-ign">${escHtml(r.ign)}</span>
+            <span class="${statusClass}">${escHtml(r.status)}</span>
+          </div>
+          <p><strong>Discord:</strong> ${escHtml(r.discord)}</p>
+          <p><strong>Type:</strong> ${escHtml(r.type)}</p>
+          <p><strong>Item:</strong> ${escHtml(r.item)}</p>
+          <p><strong>Offer:</strong> ${escHtml(r.offer)}</p>
+          ${r.date ? `<p><strong>Date:</strong> ${escHtml(r.date)}</p>` : ""}
+          ${r.note ? `<p><strong>Note:</strong> ${escHtml(r.note)}</p>` : ""}
+          ${r.handledBy ? `<p class="muted">Handled by: ${escHtml(r.handledBy)}</p>` : ""}
+          ${ownerActions}
+        </div>`;
+    }).join("");
+  }
+
+  function escHtml(str) {
+    return String(str || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  window.handleRequest = async function (index, action) {
+    const res = await fetch(`/api/requests/${index}/${action}`, { method: "POST" });
+    const data = await res.json();
+    if (data.success) {
+      loadRequests();
+    } else {
+      alert(data.error || "Action failed.");
+    }
   };
 
-  db.requests.unshift(request);
-  saveDB(db);
+  window.deleteRequest = async function (index) {
+    if (!confirm("Delete this trade request?")) return;
+    const res = await fetch(`/api/requests/${index}`, { method: "DELETE" });
+    const data = await res.json();
+    if (data.success) {
+      loadRequests();
+    } else {
+      alert(data.error || "Delete failed.");
+    }
+  };
 
-  res.json({ success: true });
-});
-
-app.post("/api/requests/:index/:action", (req, res) => {
-  if (!req.session.owner) {
-    return res.status(403).json({ error: "Owner only" });
-  }
-
-  const db = readDB();
-  const index = Number(req.params.index);
-  const action = req.params.action;
-
-  if (!db.requests[index]) {
-    return res.status(404).json({ error: "Request not found" });
-  }
-
-  if (action === "accept") {
-    db.requests[index].status = "Accepted";
-  } else if (action === "decline") {
-    db.requests[index].status = "Declined";
-  } else if (action === "done") {
-    db.requests[index].status = "Done";
-  } else {
-    return res.status(400).json({ error: "Invalid action" });
-  }
-
-  db.requests[index].handledBy = "Periwinkle Team";
-  saveDB(db);
-
-  res.json({ success: true });
-});
-
-app.delete("/api/requests/:index", (req, res) => {
-  if (!req.session.owner) {
-    return res.status(403).json({ error: "Owner only" });
-  }
-
-  const db = readDB();
-  const index = Number(req.params.index);
-
-  if (!db.requests[index]) {
-    return res.status(404).json({ error: "Request not found" });
-  }
-
-  db.requests.splice(index, 1);
-  saveDB(db);
-
-  res.json({ success: true });
-});
-
-app.listen(PORT, "0.0.0.0", () => {
-  console.log("Periwinkle server running on port " + PORT);
-});
+  loadRequests();
+})();

@@ -5,7 +5,7 @@ const session = require("express-session");
 
 const app = express();
 
-const PORT = process.env.PORT || 80;
+const PORT = process.env.PORT || 5000;
 const OWNER_USER = "ptuser";
 const OWNER_PASSWORD = process.env.OWNER_PASSWORD || "winkleperi123";
 
