@@ -1,4 +1,3 @@
-
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
@@ -6,20 +5,14 @@ const session = require("express-session");
 
 const app = express();
 
-<<<<<<< HEAD
 const PORT = process.env.PORT || 80;
-=======
-const PORT = process.env.PORT || 80;
->>>>>>> a23af475acd8558dc07d107b9d46ab518481f852
 const OWNER_USER = "ptuser";
 const OWNER_PASSWORD = process.env.OWNER_PASSWORD || "winkleperi123";
 
 const DB_PATH = path.join(__dirname, "database.json");
 
 if (!fs.existsSync(DB_PATH)) {
-  fs.writeFileSync(DB_PATH, JSON.stringify({
-    requests: []
-  }, null, 2));
+  fs.writeFileSync(DB_PATH, JSON.stringify({ requests: [] }, null, 2));
 }
 
 app.use(express.json());
@@ -54,11 +47,11 @@ app.post("/api/login-owner", (req, res) => {
 app.post("/api/login-viewer", (req, res) => {
   const { ign, discord } = req.body;
 
-  req.session.viewer = {
-    ign,
-    discord
-  };
+  if (!ign || !discord) {
+    return res.status(400).json({ error: "Minecraft IGN and Discord are required" });
+  }
 
+  req.session.viewer = { ign, discord };
   res.json({ success: true });
 });
 
@@ -70,9 +63,7 @@ app.post("/api/logout", (req, res) => {
 
 app.get("/api/session", (req, res) => {
   if (req.session.owner) {
-    return res.json({
-      mode: "owner"
-    });
+    return res.json({ mode: "owner" });
   }
 
   if (req.session.viewer) {
@@ -83,9 +74,7 @@ app.get("/api/session", (req, res) => {
     });
   }
 
-  res.json({
-    mode: "guest"
-  });
+  res.json({ mode: "guest" });
 });
 
 app.get("/api/requests", (req, res) => {
@@ -133,18 +122,15 @@ app.post("/api/requests/:index/:action", (req, res) => {
 
   if (action === "accept") {
     db.requests[index].status = "Accepted";
-  }
-
-  if (action === "decline") {
+  } else if (action === "decline") {
     db.requests[index].status = "Declined";
-  }
-
-  if (action === "done") {
+  } else if (action === "done") {
     db.requests[index].status = "Done";
+  } else {
+    return res.status(400).json({ error: "Invalid action" });
   }
 
   db.requests[index].handledBy = "Periwinkle Team";
-
   saveDB(db);
 
   res.json({ success: true });
@@ -156,9 +142,13 @@ app.delete("/api/requests/:index", (req, res) => {
   }
 
   const db = readDB();
+  const index = Number(req.params.index);
 
-  db.requests.splice(Number(req.params.index), 1);
+  if (!db.requests[index]) {
+    return res.status(404).json({ error: "Request not found" });
+  }
 
+  db.requests.splice(index, 1);
   saveDB(db);
 
   res.json({ success: true });
