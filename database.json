@@ -1,15 +1,3 @@
 {
-  "requests": [
-    {
-      "ign": "SamplePlayer",
-      "discord": "sample_user",
-      "type": "Buy",
-      "item": "64 Spruce Logs",
-      "offer": "3 Diamonds",
-      "date": "2026-05-05",
-      "note": "Can meet near spawn.",
-      "status": "Pending",
-      "handledBy": ""
-    }
-  ]
+  "requests": []
 }

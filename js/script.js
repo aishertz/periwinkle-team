@@ -24,16 +24,8 @@
 
   function applySessionToPage(session) {
     updateModeUI(session);
-
-    const viewerOnlySections = document.querySelectorAll(".viewer-only");
-    const ownerOnlySections = document.querySelectorAll(".owner-only");
-
-    viewerOnlySections.forEach(el => {
-      el.style.display = session.mode === "viewer" ? "" : "none";
-    });
-    ownerOnlySections.forEach(el => {
-      el.style.display = session.mode === "owner" ? "" : "none";
-    });
+    document.body.classList.remove("guest-mode", "viewer-mode", "owner-mode");
+    document.body.classList.add(session.mode + "-mode");
   }
 
   const session = await getSession();
@@ -169,7 +161,6 @@
   };
 
   window.deleteRequest = async function (index) {
-    if (!confirm("Delete this trade request?")) return;
     const res = await fetch(`/api/requests/${index}`, { method: "DELETE" });
     const data = await res.json();
     if (data.success) {
