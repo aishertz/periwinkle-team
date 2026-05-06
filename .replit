@@ -37,3 +37,9 @@ externalPort = 80
 [deployment]
 deploymentTarget = "autoscale"
 run = ["node", "server.js"]
+
+[userenv]
+
+[userenv.shared]
+OWNER_PASSWORD = "winkleperi123"
+SESSION_SECRET = "anything-random"
